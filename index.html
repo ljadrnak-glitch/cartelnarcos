@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Narcos Rise Of Cartels</title>
+    <style>
+        /* --- ZÁKLADNÍ STYL --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Georgia', serif;
+            cursor: default;
+        }
+
+        body {
+            min-height: 100vh;
+            color: white;
+            background-color: #050505;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* --- VIDEO POZADÍ --- */
+        #video-pozadie {
+            position: fixed;
+            top: 50%; left: 50%;
+            min-width: 100%; min-height: 100%;
+            width: auto; height: auto;
+            z-index: -2;
+            transform: translate(-50%, -50%);
+            object-fit: cover;
+            filter: brightness(0.25) contrast(1.2) grayscale(0.4);
+            transition: opacity 0.8s ease-in-out;
+        }
+
+        #staticke-pozadie {
+            position: fixed;
+            inset: -5%;
+            width: 110%; height: 110%;
+            z-index: -3;
+            background-size: cover;
+            background-position: center;
+            opacity: 0;
+            transition: opacity 0.8s ease-in-out;
+        }
+
+        .cursor-glow {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: radial-gradient(circle 350px at var(--x) var(--y), rgba(0, 162, 255, 0.08), transparent 80%);
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/7/76/1k_Grain.png');
+            opacity: 0.04;
+            z-index: 200;
+            pointer-events: none;
+            animation: grain 8s steps(10) infinite;
+        }
+
+        @keyframes grain {
+            0%, 100% { transform: translate(0,0) }
+            10% { transform: translate(-5%,-5%) }
+            50% { transform: translate(-10%,5%) }
+        }
+
+        .footer-watermark {
+            position: fixed;
+            bottom: 15px; right: 20px;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.2);
+            z-index: 50;
+        }
+
+        /* --- NAVIGACE --- */
+        nav {
+            position: fixed;
+            top: 0; width: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 25px 10%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-bottom: 2px solid #00a2ff;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-links { display: flex; list-style: none; gap: 40px; }
+        
+        .nav-links a {
+            color: #00a2ff;
+            text-decoration: none;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .nav-links a:hover { color: white; text-shadow: 0 0 15px #00a2ff; }
+
+        /* HAMBURGER */
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+            position: absolute;
+            right: 20px;
+        }
+        .hamburger div {
+            width: 25px;
+            height: 3px;
+            background: #00a2ff;
+            transition: 0.3s;
+        }
+
+        /* --- KONTEJNER --- */
+        .container {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 120px 20px 50px 20px;
+        }
+
+        .sekcia {
+            display: none;
+            width: 100%;
+            max-width: 950px;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(20px);
+            padding: 50px;
+            border-radius: 20px;
+            border: 1px solid rgba(0, 162, 255, 0.1);
+            text-align: center;
+            opacity: 0;
+            transform: translateY(15px);
+            transition: opacity 0.8s ease-in-out, transform 0.8s ease-in-out;
+            position: relative;
+        }
+
+        .sekcia.aktivna { display: block; opacity: 1; transform: translateY(0); }
+
+        /* BORDER BEAM */
+        .sekcia::after, .vedeni-item::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            padding: 2px;
+            background: conic-gradient(from var(--angle), transparent 70%, #00a2ff, #a855f7, transparent);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            animation: rotateBeam 4s linear infinite;
+            pointer-events: none;
+        }
+
+        @property --angle { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
+        @keyframes rotateBeam { to { --angle: 360deg; } }
+
+        h1 { font-size: 3.5rem; color: #00a2ff; margin-bottom: 30px; letter-spacing: 5px; text-transform: uppercase; }
+        p { font-size: 1.2rem; line-height: 1.6; color: #ddd; }
+        .blue-text { color: #00a2ff; font-weight: bold; }
+        .motto { display: block; margin-top: 40px; color: #ff4d4d; font-size: 3rem; letter-spacing: 15px; font-weight: bold; text-shadow: 0 0 20px rgba(255, 77, 77, 0.6); }
+
+        /* VEDENÍ GRID */
+        .vedeni-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 30px; }
+        .vedeni-item {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 15px 25px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.4rem;
+            transition: 0.5s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        .vedeni-item:hover { background: rgba(0, 162, 255, 0.1); transform: translateY(-5px); }
+
+        /* MODAL */
+        .modal {
+            display: none; position: fixed; z-index: 2000; inset: 0;
+            background: rgba(0, 0, 0, 0.95); align-items: center; justify-content: center;
+            backdrop-filter: blur(10px); opacity: 0; transition: opacity 0.5s ease;
+            padding: 20px;
+        }
+        .modal-content { background: #0d0d0d; border: 2px solid #222; padding: 30px; border-radius: 20px; width: 100%; max-width: 400px; text-align: center; }
+        .modal-photo { width: 100%; height: 250px; background-size: cover; background-position: center; border-radius: 10px; margin-bottom: 15px; border: 1px solid #333; }
+        .modal-desc { background: #1a1a1a; padding: 15px; border-radius: 10px; margin-top: 15px; color: #ccc; font-style: italic; }
+
+        /* TLAČÍTKA */
+        .btn { display: inline-block; margin-top: 20px; padding: 15px 30px; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: 0.4s; }
+        .btn-discord-lunar { background: #5865F2; }
+        .btn-discord-narcos { border: 1px solid #00a2ff; color: #00a2ff; }
+        .btn-close { background: #222; width: 100%; border: none; }
+
+        /* --- MOBILNÍ VERZE --- */
+        @media (max-width: 900px) {
+            body { overflow-y: auto; }
+            nav { justify-content: flex-start; padding: 20px; }
+            .hamburger { display: flex; }
+            .nav-links {
+                display: none;
+                flex-direction: column;
+                position: absolute;
+                top: 75px; left: 0;
+                width: 100%;
+                background: rgba(0, 0, 0, 0.98);
+                padding: 30px;
+                gap: 25px;
+                text-align: center;
+                border-bottom: 2px solid #00a2ff;
+            }
+            .nav-links.active { display: flex; }
+            h1 { font-size: 2.2rem; }
+            .motto { font-size: 1.8rem; letter-spacing: 5px; }
+            .container { padding-top: 100px; align-items: flex-start; }
+            .vedeni-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="cursor-glow"></div>
+    
+    <video autoplay muted loop playsinline id="video-pozadie">
+        <source src="cartel.mp4" type="video/mp4">
+    </video>
+    <div id="staticke-pozadie"></div>
+
+    <div class="footer-watermark">Narcos Rise Of Cartels</div>
+
+    <nav>
+        <div style="font-weight: 900; color: #00a2ff; letter-spacing: 2px; position: absolute; left: 20px;">NARCOS</div>
+        
+        <div class="hamburger" onclick="toggleMenu()">
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+
+        <ul class="nav-links" id="navLinks">
+            <li><a onclick="ukaz('o-nas', true)">O nás</a></li>
+            <li><a onclick="ukaz('vedeni', true)">Vedení</a></li>
+            <li><a onclick="ukaz('hrajeme', false, 'lunar.webp')">Kde hrajeme</a></li>
+            <li><a onclick="ukaz('pridaj-sa', true)">Jak se přidáš</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+
+        <div id="o-nas" class="sekcia aktivna" style="opacity: 1;">
+            <h1>Narcos Cartel</h1>
+            <p>Jsme Cartel známý jako <span class="blue-text">Narcos Rise Of Cartels</span> 👑</p>
+            <p style="margin-top: 10px;">Jsme ti nejlepší hráči na serveru EH. Narcos není jen skupina, je to rodina a nikdo nás neporazí.</p>
+            <span class="motto">𝓝𝓞 𝓜𝓔𝓡𝓒𝓨</span>
+        </div>
+
+        <div id="vedeni" class="sekcia">
+            <h1>Vedení Cartelu</h1>
+            <div class="vedeni-grid">
+                <div class="vedeni-item" onclick="showMember('Rico', 'El Patrón 👑', 'Odvážný majitel NARCOS, věrný svým členům a připravený riskovat vše, aby byl kartel na vrcholu. Podpis El Patrona, vlastní krví.', 'rico.webp')">
+                    <span>Rico</span><span class="blue-text">👑 El Patrón</span>
+                </div>
+                <div class="vedeni-item" onclick="showMember('Exron', 'Segundo Patrón 🔱', 'Elitní PVP hráč a věrný OG člen, který nikdy nezradil. Nejlepší Segundo Patrón v historii NARCOS, vždy připravený podržet rodinu v problémech. S láskou, váš Exron.', 'exron.webp')">
+                    <span>Exron</span><span class="blue-text">🔱 Segundo Patrón</span>
+                </div>
+                <div class="vedeni-item" onclick="showMember('Mathias', 'Consejo del Cartel ⚖️', 'Nebojím se zapojit do jakéhokoliv konfliktu a bránit kartel vlastním tělem. Každý, kdo si začne s Narcos, za to ponese krutý trest. Vaše ochrana, můj slib. – Mathias', 'mathias.webp')">
+                    <span>Mathias</span><span class="blue-text">⚖️ Consejo</span>
+                </div>
+                <div class="vedeni-item" onclick="showMember('Davekk', 'Comandante Mayor 🎖️', 'Věrný velitel, který ctí jméno Narcos za každé situace. Jako Comandante Mayor stojí v první linii a chrání zájmy kartelu v časech klidu i v dobách největších válek.', 'davekk.webp')">
+                    <span>Davekk</span><span class="blue-text">🎖️ Comandante</span>
+                </div>
+                <div class="vedeni-item" onclick="showMember('Jakab', 'Underboss 🦁', 'Pohodář, který miluje zábavu a drží partu pohromadě, ale nenechte se zmást. Jakmile dojde k podrazu, jde sranda stranou. Jakab neodpouští, řeší věci tvrdě a loajalita je pro něj posvátná povinnost.', 'jakab.webp')">
+                    <span>Jakab</span><span class="blue-text">🦁 Underboss</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="hrajeme" class="sekcia">
+            <h1>KDE HRAJEME</h1>
+            <p>Hrajeme na Emergency Hamburg serveru <span class="blue-text" style="color: #a855f7;">LUNAR RP</span></p>
+            <p style="margin-top: 10px;">Kód pro připojení in-game: <span class="blue-text" style="color: #a855f7;">zsx706kj</span></p>
+            <a href="https://discord.gg/lunarczskrp" target="_blank" class="btn btn-discord-lunar">Náš Discord Server (LUNAR)</a>
+        </div>
+
+        <div id="pridaj-sa" class="sekcia">
+            <h1>NÁBOR DO CARTELU</h1>
+            <p>Chceš se k nám přidat? Postupuj podle těchto kroků:</p>
+            <div style="text-align: left; background: rgba(0, 162, 255, 0.03); padding: 30px; border-radius: 15px; margin-top: 30px; border: 1px dashed rgba(0, 162, 255, 0.3);">
+                <p>◈ Založte si ticket na <span class="blue-text">LUNAR RP</span> pro vstup do mafie.</p>
+                <p>◈ Na našem <span class="blue-text">Narcos serveru</span> založte ticket "nabor do cartelu".</p>
+                <p>◈ Projděte zkouškami, které rozhodnou o vašem vstupu.</p>
+            </div>
+            <a href="https://discord.gg/bKPW5hnteA" target="_blank" class="btn btn-discord-narcos">Narcos Discord Server</a>
+        </div>
+
+    </div>
+
+    <div id="member-modal" class="modal" onclick="closeModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div id="modal-img" class="modal-photo"></div>
+            <h2 id="modal-name">Meno</h2>
+            <p id="modal-role" class="blue-text">Rola</p>
+            <div id="modal-desc" class="modal-desc">Popis...</div>
+            <button class="btn btn-close" onclick="closeModal()">Zavřít</button>
+        </div>
+    </div>
+
+    <script>
+        function toggleMenu() {
+            document.getElementById('navLinks').classList.toggle('active');
+        }
+
+        const glow = document.querySelector('.cursor-glow');
+        window.addEventListener('mousemove', (e) => {
+            glow.style.setProperty('--x', e.clientX + 'px');
+            glow.style.setProperty('--y', e.clientY + 'px');
+        });
+
+        function ukaz(idSekcie, pouzitVideo, fotka = '') {
+            const vsechny = document.querySelectorAll('.sekcia');
+            const video = document.getElementById('video-pozadie');
+            const statika = document.getElementById('staticke-pozadie');
+            
+            document.getElementById('navLinks').classList.remove('active');
+
+            vsechny.forEach(s => {
+                s.style.opacity = '0';
+                s.style.transform = 'translateY(15px)';
+                setTimeout(() => { s.classList.remove('aktivna'); }, 500);
+            });
+
+            if (pouzitVideo) {
+                video.style.opacity = '1';
+                statika.style.opacity = '0';
+            } else {
+                video.style.opacity = '0';
+                statika.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)), url('${fotka}')`;
+                statika.style.opacity = '1';
+            }
+
+            setTimeout(() => {
+                const ciel = document.getElementById(idSekcie);
+                ciel.classList.add('aktivna');
+                setTimeout(() => { 
+                    ciel.style.opacity = '1'; 
+                    ciel.style.transform = 'translateY(0)';
+                }, 50);
+            }, 500);
+
+            if(window.innerWidth < 900) {
+                window.scrollTo({top: 0, behavior: 'smooth'});
+            }
+        }
+
+        function showMember(name, role, desc, img) {
+            const modal = document.getElementById('member-modal');
+            document.getElementById('modal-name').innerText = name;
+            document.getElementById('modal-role').innerText = role;
+            document.getElementById('modal-desc').innerText = desc;
+            document.getElementById('modal-img').style.backgroundImage = `url('${img}')`;
+            modal.style.display = 'flex';
+            setTimeout(() => { modal.style.opacity = '1'; }, 10);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('member-modal');
+            modal.style.opacity = '0';
+            setTimeout(() => { modal.style.display = 'none'; }, 500);
+        }
+    </script>
+</body>
+</html>
